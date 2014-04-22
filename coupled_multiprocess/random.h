@@ -7,7 +7,7 @@
 #include <math.h>
 #include <string.h>
 
-static const int LATTICE_SIZE = 300;
+static const int LATTICE_SIZE = 800;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define NSAMPLE 10	 
 #define MONOMER 0
@@ -101,8 +101,8 @@ typedef struct gcsize
 typedef struct node
 {
 	//point id;
-	int inter;		 //interdepent neighbor
-	stack *base;	 //interconnect neighbors
+	int inter;
+	stack *base;
 	bool alive;
 	int cluster;
 	//int type;

@@ -78,75 +78,43 @@ void lattice(node *G)
 //			printf("%d\n", i);
 //	}
 //}
-//FILE *ffp = fopen("data/avg_dis.dat", "w");
-//ER graph with N nodes, connecting nodes with probablity p and with distance l
-//implemented with true random method
+
+//ER graph with N nodes and connection probablity p
 void ER_length(node *G, double p, int l)
 {
 	for (int i = 0; i < N; i++) {
 		stack_clear(G[i].base);
 	}
 	double r = 0.0;
-	//periodic boundry
 	int m = sqrt((double)N);
 	for (int i = 0; i < N; i++) {
+		//clock_t dt1 = 0, dt2 = 0, dt3 = 0, dt4 = 0;
 		for (int j = i+1; j < N; j++) {	
-			int dx=0, dy=0, distance = 0;
-			dx = abs(i / m - j / m);
-			dy = abs(i % m - j % m);
+			//clock_t t1, t2, t3, t4;
+			//t1 = clock();
+			int dx=0, dy=0, dd = 0, distance = 0;
+			dd = abs(i - j);
+			dx = dd / m;
+			dy = dd % m;
 			distance = MIN(dx, m-dx) + MIN(dy, m-dy);
-			
 			if (distance > l)
 				continue;
+			//t2 = clock();
 			r = (double)rand() / RAND_MAX;
+			//t3 = clock();
 			if (r < p) {
-#ifdef _DEBUG
-				printf("yes\t%d\t%d\n", i, j);
-#endif
-				//printf("%d\t%d\t%f\t%d\n", i, j, p, distance);
-				//fprintf(ffp, "%f\t%d\n", p, distance);
 				stack_push(G[i].base, j);
 				stack_push(G[j].base, i);
 			} 
+			//t4 = clock();
+			//dt1 += t2 - t1;
+			//dt2 += t3 - t2;
+			//dt3 += t4 - t3;
+			//dt4 += t4 - t1; 
 		}
-		//printf("%d\n", i);
+		//printf("%ld\t%ld\t%ld\t%ld\n", dt1, dt2, dt3, dt4);
 		if (i % 1000 == 0)
 			printf("%d\n", i);
-	}
-}
-//ER graph with N nodes, connecting nodes with probablity p and with distance L
-//replace probability with portion, 
-//speed up network generating process with time costing of O(N^2)*T(rand()) to O(pN^2)*T(rand()), in which p is very small usually.
-void ER_length1(node *G, double p, int L)
-{
-	for (int i = 0; i < N; i++) {
-		stack_clear(G[i].base);
-	}
-	
-	int m = sqrt((double)N);		//periodic boundry, square length
-	int n = (int)(p*N*(N - 1) / 2);	//number of edges to be connected
-	for (int k = 0; k < n;k++)	{		
-		int r1 = rand() % N;
-		int r2 = rand() % N;
-		int dx = 0, dy = 0, distance = 0;
-		dx = abs(r1 / m - r2 / m);
-		dy = abs(r1 % m - r2 % m);
-		distance = MIN(dx, m - dx) + MIN(dy, m - dy);
-
-		if (distance <= L) {			//connection distance shorter than L	
-			//connect r2 as r1's neighbr.
-			/*
-			NOTICE: if r2 is already r1's neighbor, this will add r2 again, 
-			but it does not matter because the probability of geting two identical edge
-			is about n^2/N^4=p^2, usually p is very small.  
-			*/
-			stack_push(G[r1].base, r2);	
-			stack_push(G[r2].base, r1);
-		} 
-		else k--;			
-
-		if (k % 1000 == 0)
-			printf("%d\t%d\n", n, k);
 	}
 }
 
@@ -262,11 +230,7 @@ void avg_degree(node *G)
 int main()
 {
 	srand(time(NULL));
-#ifdef _DEBUG
-	FILE *fp = fopen("data/debug_result.dat", "w");
-#else
 	FILE *fp = fopen("data/result.dat", "w");
-#endif
 	if (!fp)
 		printf("Bad file or directory!");
 
@@ -276,20 +240,19 @@ int main()
 	sps = stack_init();
 
 	//ER network with probability p
-	//for speed consideration, I moved it out of loop.
-	//random network should regenerate every relazation   
+	//!!!!!!!!for speed consideration, I moved it out of loop.
+	//However, random network should regenerate every relazation   
 
 	//avg_degree(A);
 	lattice(A);
-	
-	for (double c = 200; c <= 205; c += 1) {
-		ER_length1(B, 2.0 / N, c);
-		//ER_length1(B, 0.001, c);
-		for (double p = 0.01; p <= 1.0; p += 0.01) {
-			for (int k = 0; k < NSAMPLE; k++) {
-				gcsize s;
-				init_attack(1 - p);
-				int pre_cluster_size = 0, cluster_size = 0;
+	for (int c = 130; c < 1000; c+=10) {
+		//ER_length(A, 5.0 / N, c);
+		ER_length(B, 5.0 / N, c);
+		for (double p=0.6; p<=1.0; p+=0.01) {
+			for (int k=0; k<NSAMPLE; k++) {
+				gcsize s;	
+				init_attack(1-p);
+				int pre_cluster_size = 0, cluster_size = 0;				
 				int iter = 0;
 				//gcsize s1, s2;
 				//memset(&s1, 0, sizeof(s1));
@@ -297,7 +260,7 @@ int main()
 				while (1) {
 					iter++;
 					gaint_component(A, B);
-					s = get_size(A);
+					s=get_size(A);
 					//img_print(A, true);
 					cluster_size = s.maxsize;
 					if (cluster_size == pre_cluster_size)
@@ -306,17 +269,16 @@ int main()
 					gaint_component(B, A);
 					//img_print(B, false);
 				}
-				s = get_size(A);
-				printf("%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
-				fprintf(fp, "%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
+				s=get_size(A);
+				printf("%d\t%d\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
+				fprintf(fp, "%d\t%d\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
 
 				clear(A);
 				clear(B);
 			}
-			printf("%.2f\t%.2f\n", c, p);
-		}
+			printf("%d\t%.2f\n", c, p);
+		} 
 	}
-
 
 	release(A);
 	release(B);
