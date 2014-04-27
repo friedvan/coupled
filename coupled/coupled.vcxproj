@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="random.h" />
+    <ClInclude Include="save.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8CAFC5EA-15FF-4DA2-A951-455F6ED66373}</ProjectGuid>
@@ -44,7 +45,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>D:\OpenCV2.1\include\opencv;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\OpenCV2.1\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

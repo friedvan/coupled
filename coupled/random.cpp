@@ -1,6 +1,7 @@
 
 #include "random.h"
 //#include "visual.h"
+//#include "save.h"
 
 node *A, *B;//[N][N], B[N][N];
 stack *sps;
@@ -123,15 +124,26 @@ void ER_length1(node *G, double p, int L)
 		stack_clear(G[i].base);
 	}
 	
-	int m = sqrt((double)N);		//periodic boundry, square length
+	int m = sqrt((double)N);		//square length
 	int n = (int)(p*N*(N - 1) / 2);	//number of edges to be connected
+
+	int r1, r2, x1, y1, minx, miny, maxx, maxy, x2, y2, dx, dy, distance;
 	for (int k = 0; k < n;k++)	{		
-		int r1 = rand() % N;
-		int r2 = rand() % N;
-		int dx = 0, dy = 0, distance = 0;
+		r1 = rand() % N;
+		x1 = r1 / m;
+		y1 = r1 % m;
+		minx = (x1 - L) > 0 ? (x1 - L) : 0;
+		maxx = (x1 + L) > m ? m : (x1 + L);
+		miny = (y1 - L) > 0 ? (y1 - L) : 0;
+		maxy = (y1 + L) > m ? m : (y1 + L);		
+		x2 = minx + rand() % (maxx - minx);
+		y2 = miny + rand() % (maxy - miny);
+		r2 = x2 * m + y2;
+
 		dx = abs(r1 / m - r2 / m);
 		dy = abs(r1 % m - r2 % m);
-		distance = MIN(dx, m - dx) + MIN(dy, m - dy);
+		//distance = MIN(dx, m - dx) + MIN(dy, m - dy);	   //periodic boundry, 
+		distance = dx + dy;
 
 		if (distance <= L) {			//connection distance shorter than L	
 			//connect r2 as r1's neighbr.
@@ -145,8 +157,42 @@ void ER_length1(node *G, double p, int L)
 		} 
 		else k--;			
 
-		if (k % 1000 == 0)
-			printf("%d\t%d\n", n, k);
+	//	if (k % 1000 == 0)
+	//		printf("%d\t%d\n", n, k);
+	}
+}
+
+void ER_length2(node *G, double p, double L)
+{
+	for (int i = 0; i < N; i++) {
+		stack_clear(G[i].base);
+	}
+
+	int m = sqrt((double)N);		//square length
+	int n = (int)(p*N*(N - 1) / 2);	//number of edges to be connected
+	for (int k = 0; k < n; k++)	{
+		int r1 = rand() % N;
+		int r2 = rand() % N;
+		int dx = 0, dy = 0, distance = 0;
+		dx = abs(r1 / m - r2 / m);
+		dy = abs(r1 % m - r2 % m);
+		distance = MIN(dx, m - dx) + MIN(dy, m - dy);	   //periodic boundry, 
+		//distance = dx + dy;
+
+		if (distance <= L) {			//connection distance shorter than L	
+			//connect r2 as r1's neighbr.
+			/*
+			NOTICE: if r2 is already r1's neighbor, this will add r2 again,
+			but it does not matter because the probability of geting two identical edge
+			is about n^2/N^4=p^2, usually p is very small.
+			*/
+			stack_push(G[r1].base, r2);
+			stack_push(G[r2].base, r1);
+		}
+		else k--;
+
+		//	if (k % 1000 == 0)
+		//		printf("%d\t%d\n", n, k);
 	}
 }
 
@@ -282,9 +328,14 @@ int main()
 	//avg_degree(A);
 	lattice(A);
 	
-	for (double c = 200; c <= 205; c += 1) {
-		ER_length1(B, 2.0 / N, c);
-		//ER_length1(B, 0.001, c);
+	//for (double c = 0.5; c <= 10.0; c+= 0.5) {
+	for (double c = 1; c < 11;c++) {
+		//ER_length1(A, 5.0 / N, c);
+		ER_length1(B, 5.0 / N, c);
+		//A = B;
+		//save_network(B);
+		//break;
+		
 		for (double p = 0.01; p <= 1.0; p += 0.01) {
 			for (int k = 0; k < NSAMPLE; k++) {
 				gcsize s;
@@ -307,7 +358,7 @@ int main()
 					//img_print(B, false);
 				}
 				s = get_size(A);
-				printf("%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
+				//printf("%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
 				fprintf(fp, "%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
 
 				clear(A);

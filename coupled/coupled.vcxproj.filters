@@ -23,5 +23,8 @@
     <ClInclude Include="random.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="save.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

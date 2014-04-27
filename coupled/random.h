@@ -7,7 +7,9 @@
 #include <math.h>
 #include <string.h>
 
-static const int LATTICE_SIZE = 300;
+//#include "visual.h"
+
+static const int LATTICE_SIZE = 200;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define NSAMPLE 10	 
 #define MONOMER 0
@@ -108,3 +110,25 @@ typedef struct node
 	//int type;
 	//int gaint;
 }node;
+		
+
+
+void save_network(node *G)
+{
+	FILE *fp = fopen("B.csv", "w");
+	fprintf(fp, "node,pathid,type,x,y\n");
+	int pathid = 0;
+	for (int k = 0; k < N; k++) {
+		int fx = k / LATTICE_SIZE;
+		int fy = k % LATTICE_SIZE; 		
+		for (int i = 0; i<stack_len(G[k].base); i++){  
+			pathid++;
+			int neighbor = G[k].base->head[i];
+			int nx = neighbor / LATTICE_SIZE;
+			int ny = neighbor % LATTICE_SIZE;
+			fprintf(fp, "%d,%d,%d,%d,%d\n", k, pathid, 1, fx, fy);
+			fprintf(fp, "%d,%d,%d,%d,%d\n", neighbor, pathid, 2, nx, ny);
+		}
+	}
+	fclose(fp);
+}
