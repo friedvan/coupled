@@ -10,14 +10,15 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+//#include <iostream>
+#include <vector>
+using namespace std;
 
 //#include "visual.h"
 
 static const int LATTICE_SIZE = 50;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define NSAMPLE 10	 
-#define MONOMER 0
-#define DIMER 1
 
 #define AVERAGE_DEGREE 5
 #define NTHREAD 2
@@ -103,39 +104,51 @@ void stack_clear(stack *ps)
 //nodes, graph
 /******************************************************************/
 
-//typedef struct gcsize
-//{
-//	int maxsize;
-//	int monosize;
-//	int dimersize;
-//}gcsize;
-
-typedef struct gcsize
+class vertex
 {
-	int maxsize;  //largest component size
-	int secondsize;	// second largest component size
-}gcsize;
-
-
-typedef struct node
-{
+public:
+	vertex();
+	~vertex();
 	//point id;
-	int inter;		 //interdepent neighbor
-	stack *base;	 //interconnect neighbors
+	int interdependent;		 //interdepent neighbor
+	stack *interconnect;	 //interconnect neighbors
 	bool alive;
 	int cluster;
-	//int type;
-	//int gaint;
-}node;
+	
+	void init(int id);
+};
 
-//typedef struct network
-//{
-//	node *graph;
-//	int maxsize;
-//	int secondsize;
-//	int maxcluster;
-//	int secondcluster;
-//};
+class network
+{
+public:
+	vertex *G;
+	stack* sps;
+
+	int maxcc_size;
+	int secondcc_size; 
+
+	network(int network_size);
+	~network();
+
+	void clear();
+
+	int dfs(int pt, int label);
+
+	void lattice();
+	void ER_length1(double p, int L);	
+};
+
+class couplednetwork
+{
+public :
+	couplednetwork();
+	~couplednetwork();
+	network *A;
+	network *B;
+
+	void gaint_component(network *G1, network *G2);
+	void init_attack(network *G1, network *G2, double p);
+};
 
 
 //save network to file
