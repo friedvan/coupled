@@ -13,7 +13,7 @@
 
 //#include "visual.h"
 
-static const int LATTICE_SIZE = 50;
+static const int LATTICE_SIZE = 200;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define NSAMPLE 10	 
 #define MONOMER 0
@@ -22,7 +22,7 @@ static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define AVERAGE_DEGREE 5
 #define NTHREAD 2
 #define MINL 2
-#define LOAD_PER_THREAD 1
+#define LOAD_PER_THREAD 5
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -103,19 +103,12 @@ void stack_clear(stack *ps)
 //nodes, graph
 /******************************************************************/
 
-//typedef struct gcsize
-//{
-//	int maxsize;
-//	int monosize;
-//	int dimersize;
-//}gcsize;
-
 typedef struct gcsize
 {
-	int maxsize;  //largest component size
-	int secondsize;	// second largest component size
+	int maxsize;
+	int monosize;
+	int dimersize;
 }gcsize;
-
 
 typedef struct node
 {
@@ -127,15 +120,6 @@ typedef struct node
 	//int type;
 	//int gaint;
 }node;
-
-//typedef struct network
-//{
-//	node *graph;
-//	int maxsize;
-//	int secondsize;
-//	int maxcluster;
-//	int secondcluster;
-//};
 
 
 //save network to file
