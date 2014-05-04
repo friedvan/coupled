@@ -16,14 +16,14 @@ using namespace std;
 
 //#include "visual.h"
 
-static const int LATTICE_SIZE = 50;
+static const int LATTICE_SIZE = 100;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define NSAMPLE 10	 
 
 #define AVERAGE_DEGREE 5
-#define NTHREAD 2
+#define NTHREAD 1
 #define MINL 2
-#define LOAD_PER_THREAD 1
+#define LOAD_PER_THREAD 30
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -178,7 +178,7 @@ typedef struct thread_args
 {
 	int minl;
 	int maxl;
-};
+}thread_args;
 
 
 

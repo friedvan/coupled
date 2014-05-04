@@ -159,7 +159,8 @@ int network::dfs(int pt, int lable)
 			continue;
 		top->cluster = lable;
 		bool changed = false;
-		for (int i = 0; i < stack_len(top->interconnect); i++) {
+		int neighbor_len = stack_len(top->interconnect);
+		for (int i = 0; i < neighbor_len; i++) {
 			vertex *neighbor = G + top->interconnect->head[i];
 			if (neighbor->alive && neighbor->cluster == 0) {//alive and not visited
 				neighbor->cluster = lable;
@@ -179,13 +180,19 @@ void couplednetwork::gaint_component(network *G1, network *G2)
 	int maxsize = 0, maxcluster = -1, size = 0;//, monosize=0, dimersize=0;
 	int secondsize = 0, secondcluster = -1;
 
-	for (int j = 0; j<N && size <= N / 2 + 1; j++) {
+	//for (int j = 0; j<N && size <= N / 2 + 1; j++) {	//if size of cc larger than half of the nodes, it must be the largest
+	for (int j = 0; j<N && size <= N; j++) {//find second largest 
 		if (G1->G[j].alive && G1->G[j].cluster == 0) {//alive and not visited.
 			size = G1->dfs(j, label);
-			if (size > maxsize) {
-				secondsize = maxsize;
+			if (size > maxsize) {				
+				secondsize = maxsize;//first copy max to second, then update max
+				secondcluster = maxcluster;
 				maxcluster = label;
-				maxsize = size;				
+				maxsize = size;
+			}
+			else if(size > secondsize) {
+				secondsize = size;
+				secondcluster = label;
 			}
 			label++;
 		}
@@ -198,7 +205,7 @@ void couplednetwork::gaint_component(network *G1, network *G2)
 	//set non gaint component vertex to death
 	for (int j = 0; j < N; j++) {
 		if (G1->G[j].alive) {
-			if (G1->G[j].cluster != maxcluster){
+			if (G1->G[j].cluster != maxcluster && G1->G[j].cluster != secondcluster){ //if cluster label is not max and second
 				G1->G[j].alive = false;
 				if (G1->G[j].interdependent != -1)	 //-1 means has no interdependent nodes
 					G2->G[G1->G[j].interdependent].alive = false;
@@ -233,7 +240,7 @@ void* run(void *param)
 		for (double p = 0.01; p <= 1.0; p += 0.01) {
 			for (int k = 0; k < NSAMPLE; k++) {
 				//get random targets
-				cn.init_attack(cn.A, cn.B, p);
+				cn.init_attack(cn.A, cn.B, 1-p);
 
 				int pre_cluster_size = 0, cluster_size = 0;
 				int iter = 0;
@@ -247,11 +254,10 @@ void* run(void *param)
 						break;
 					pre_cluster_size = cluster_size;
 					//largest cc in B live
-					cn.gaint_component(cn.B, cn.A);
-				
+					cn.gaint_component(cn.B, cn.A);			 				
 				}
 				//printf("%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
-				fprintf(fp, "%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cn.A->maxcc_size, cn.A->secondcc_size, iter);
+				fprintf(fp, "%d\t%f\t%f\t%d\t%d\t%d\n", k, c, p, cn.A->maxcc_size, cn.A->secondcc_size, iter);
 
 				cn.A->clear();
 				cn.B->clear();
