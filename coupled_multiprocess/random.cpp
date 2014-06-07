@@ -179,7 +179,7 @@ void couplednetwork::gaint_component(network *G1, network *G2)
 	int label = 1;
 	int maxsize = 0, maxcluster = -1, size = 0;//, monosize=0, dimersize=0;
 	int secondsize = 0, secondcluster = -1;
-
+	
 	//for (int j = 0; j<N && size <= N / 2 + 1; j++) {	//if size of cc larger than half of the nodes, it must be the largest
 	for (int j = 0; j<N && size <= N; j++) {//find second largest 
 		if (G1->G[j].alive && G1->G[j].cluster == 0) {//alive and not visited.
@@ -200,6 +200,7 @@ void couplednetwork::gaint_component(network *G1, network *G2)
 
 	G1->maxcc_size = maxsize;
 	G1->secondcc_size = secondsize;
+	
 
 
 	//set non gaint component vertex to death
@@ -217,6 +218,40 @@ void couplednetwork::gaint_component(network *G1, network *G2)
 	}
 }
 
+double average_degree(network *net)
+{
+	int degree = 0;
+	for (int i = 0; i < N; i++)
+	{
+		degree += stack_len((net->G + i)->interconnect);
+	}
+	return degree / (float)N;
+}
+
+void couplednetwork::random_couple()
+{
+	//get a random permulation array of length N
+	int SHUFFLE_TIMES = 5;
+	int arr[N];
+	for (int i = 0; i < N; i++) {
+		arr[i] = i;
+	}
+	for (int k = 0; k < SHUFFLE_TIMES; k++) {
+		for (int i = 0; i < N; i++) {
+			//get a random number smaller than N
+			int r = rand() % N;
+			//swap element in position i and r
+			int temp = arr[i];
+			arr[i] = arr[r];
+			arr[r] = temp;
+		}
+	}
+	//random couple(interdependent) nodes in network A and B
+	for (int i = 0; i < N; i++) {
+		A->G[i].interdependent = arr[i];
+		B->G[arr[i]].interdependent = i;
+	}
+}
 void* run(void *param)
 {
 	//prase args
@@ -235,11 +270,15 @@ void* run(void *param)
 
 	cn.A->lattice(); 
 	for (double c = minl; c < maxl; c++) {
+		//cn.A->ER_length1((double)AVERAGE_DEGREE / N, c);
 		//network B
 		cn.B->ER_length1((double)AVERAGE_DEGREE / N, c);
+		
+		//double avg_d = average_degree(cn.B);
 		for (double p = 0.01; p <= 1.0; p += 0.01) {
 			for (int k = 0; k < NSAMPLE; k++) {
 				//get random targets
+				//cn.random_couple();
 				cn.init_attack(cn.A, cn.B, 1-p);
 
 				int pre_cluster_size = 0, cluster_size = 0;
@@ -256,13 +295,15 @@ void* run(void *param)
 					//largest cc in B live
 					cn.gaint_component(cn.B, cn.A);			 				
 				}
+				
 				//printf("%d\t%f\t%f\t%d\t%d\t%d\t%d\n", k, c, p, cluster_size, s.monosize, s.dimersize, iter);
 				fprintf(fp, "%d\t%f\t%f\t%d\t%d\t%d\n", k, c, p, cn.A->maxcc_size, cn.A->secondcc_size, iter);
+				//fprintf(fp, "%d\t%f\t%f\t%d\t%f\t%d\n", k, c, p, cn.A->maxcc_size, avg_d, iter);
 
 				cn.A->clear();
 				cn.B->clear();
 			}
-			printf("%.2f\t%.2f\n", c, p);
+			printf("%.3f\t%.3f\n", c, p);
 		}
 	}
 

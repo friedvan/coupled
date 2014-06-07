@@ -16,14 +16,14 @@ using namespace std;
 
 //#include "visual.h"
 
-static const int LATTICE_SIZE = 100;
+static const int LATTICE_SIZE = 200;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define NSAMPLE 10	 
 
 #define AVERAGE_DEGREE 5
 #define NTHREAD 1
 #define MINL 2
-#define LOAD_PER_THREAD 30
+#define LOAD_PER_THREAD 20
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -126,6 +126,7 @@ public:
 
 	int maxcc_size;
 	int secondcc_size; 
+	
 
 	network(int network_size);
 	~network();
@@ -146,6 +147,7 @@ public :
 	network *A;
 	network *B;
 
+	void random_couple(void);
 	void gaint_component(network *G1, network *G2);
 	void init_attack(network *G1, network *G2, double p);
 };
