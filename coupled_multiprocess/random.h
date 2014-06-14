@@ -10,20 +10,31 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <algorithm>
 //#include <iostream>
 #include <vector>
 using namespace std;
 
 //#include "visual.h"
 
-static const int LATTICE_SIZE = 200;
+static const int LATTICE_SIZE = 100;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
 #define NSAMPLE 10	 
 
-#define AVERAGE_DEGREE 5
+#define ER_AVERAGE_DEGREE 5
+#define SF_GAMMA 3.0
+#define SF_GAMMA_NORM_FACTOR 1.202
+/*
+3.0	1.202
+2.9	1.223
+2.8 1.247
+2.7 1.274
+2.6 1.305
+2.5 1.341
+*/
 #define NTHREAD 1
 #define MINL 2
-#define LOAD_PER_THREAD 20
+#define LOAD_PER_THREAD 10
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -137,6 +148,12 @@ public:
 
 	void lattice();
 	void ER_length1(double p, int L);	
+	vector<int> node_sequence_scale_free(double gamma);
+	void configuration_model(double gamma, int L);
+	vector<int> node_degree_scale_free(double gamma);
+	void random_geometric_graph(double p, int L);
+	//void scale_free_length(int L);
+	//void store_nodes_within_distance(stack *pool, bool exist[], int node, int L);
 };
 
 class couplednetwork

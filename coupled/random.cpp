@@ -44,7 +44,7 @@ void release(node *G)
 // lattice network 
 void lattice(node *G)
 {
-	int m = sqrt((double)N);
+	int m = LATTICE_SIZE;
 	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < m; j++) {
 			stack_push(G[i*m+j].base, ((i - 1 + m) % m) * m + j);//up
@@ -89,7 +89,7 @@ void ER_length(node *G, double p, int l)
 	}
 	double r = 0.0;
 	//periodic boundry
-	int m = sqrt((double)N);
+	int m = LATTICE_SIZE;
 	for (int i = 0; i < N; i++) {
 		for (int j = i+1; j < N; j++) {	
 			int dx=0, dy=0, distance = 0;
@@ -124,7 +124,7 @@ void ER_length1(node *G, double p, int L)
 		stack_clear(G[i].base);
 	}
 	
-	int m = sqrt((double)N);		//square length
+	int m = LATTICE_SIZE;		//square length
 	int n = (int)(p*N*(N - 1) / 2);	//number of edges to be connected
 
 	int r1, r2, x1, y1, minx, miny, maxx, maxy, x2, y2, dx, dy, distance;
@@ -168,7 +168,7 @@ void ER_length2(node *G, double p, double L)
 		stack_clear(G[i].base);
 	}
 
-	int m = sqrt((double)N);		//square length
+	int m = LATTICE_SIZE;		//square length
 	int n = (int)(p*N*(N - 1) / 2);	//number of edges to be connected
 	for (int k = 0; k < n; k++)	{
 		int r1 = rand() % N;
