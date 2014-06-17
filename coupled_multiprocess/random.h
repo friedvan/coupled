@@ -32,9 +32,9 @@ static const int N = LATTICE_SIZE*LATTICE_SIZE;
 2.6 1.305
 2.5 1.341
 */
-#define NTHREAD 1
-#define MINL 2
-#define LOAD_PER_THREAD 10
+#define NTHREAD 3
+#define MINL 97
+#define LOAD_PER_THREAD 2
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 

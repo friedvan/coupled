@@ -91,10 +91,10 @@ void network::random_geometric_graph(double p, int L) {
 	for (int i = 0; i < N; i++) {
 		stack_clear(G[i].interconnect);
 	}
-	bool alive[N] = {false};
+	bool alive[N] = { false };
 	for (int i = 0; i<N; i++) {
-		if (double(rand()) / RAND_MAX < 0.8)  //randomly choose p*N nodes
-			alive[i]=true;
+		if (double(rand()) / RAND_MAX < (double)L/LOAD_PER_THREAD)  //randomly choose p*N nodes
+			alive[i] = true;
 	}
 	
 	int m = LATTICE_SIZE;
@@ -110,7 +110,7 @@ void network::random_geometric_graph(double p, int L) {
 		miny = y1 - L;
 		maxy = y1 + L;
 
-		int area = (maxy - miny)*(maxx - minx)/2/(LATTICE_SIZE*LATTICE_SIZE);
+		int area = 4 * L*L;
 		for (int x2 = minx; x2 < maxx; x2++){
 			int x = (x2 + m) % m;
 			for (int y2 = miny; y2 < maxy; y2++) {
@@ -121,8 +121,8 @@ void network::random_geometric_graph(double p, int L) {
 				dx = abs(r1 / m - r2 / m);
 				dy = abs(r1 % m - r2 % m);
 				distance = MIN(dx, m - dx) + MIN(dy, m - dy);	   //periodic boundry, 
-				if (distance <= L) {			//connection distance shorter than L
-					if ((double)rand() / RAND_MAX>10.0/area) continue;
+				if (distance <= 2) {			//connection distance shorter than L
+					//if ((double)rand() / RAND_MAX>10.0 / area) continue;
 					//connect r2 as r1's neighbr.
 					/*
 					NOTICE: if r2 is already r1's neighbor, this will add r2 again,
@@ -136,6 +136,55 @@ void network::random_geometric_graph(double p, int L) {
 		}
 	}
 }
+//void network::random_geometric_graph(double p, int L) {
+//	for (int i = 0; i < N; i++) {
+//		stack_clear(G[i].interconnect);
+//	}
+//	bool alive[N] = {false};
+//	for (int i = 0; i<N; i++) {
+//		if (double(rand()) / RAND_MAX < 1.01)  //randomly choose p*N nodes
+//			alive[i]=true;
+//	}
+//	
+//	int m = LATTICE_SIZE;
+//	int r1, r2, x1, y1, minx, miny, maxx, maxy, dx, dy, distance;
+//
+//	for (int k = 0; k < N; k++)	{
+//		if (!alive[k]) continue;
+//		r1 = k;
+//		x1 = r1 / m;
+//		y1 = r1 % m;
+//		minx = x1 - L;
+//		maxx = x1 + L;
+//		miny = y1 - L;
+//		maxy = y1 + L;
+//
+//		int area = 4*L*L; 		
+//		for (int x2 = minx; x2 < maxx; x2++){
+//			int x = (x2 + m) % m;
+//			for (int y2 = miny; y2 < maxy; y2++) {
+//				int y = (y2 + m) % m;
+//				r2 = x * m + y;
+//				if (!alive[r2] || r1 >= r2)
+//					continue;	//not alive or already connected
+//				dx = abs(r1 / m - r2 / m);
+//				dy = abs(r1 % m - r2 % m);
+//				distance = MIN(dx, m - dx) + MIN(dy, m - dy);	   //periodic boundry, 
+//				if (distance <= L) {			//connection distance shorter than L
+//					if ((double)rand() / RAND_MAX>10.0/area) continue;
+//					//connect r2 as r1's neighbr.
+//					/*
+//					NOTICE: if r2 is already r1's neighbor, this will add r2 again,
+//					but it does not matter because the probability of geting two identical edge
+//					is about n^2/N^4=p^2, usually p is very small.
+//					*/
+//					stack_push(G[r1].interconnect, r2);
+//					stack_push(G[r2].interconnect, r1);
+//				}
+//			}
+//		}
+//	}
+//}
 
 //ER graph with N nodes, connecting nodes with probablity p and with distance L
 //replace probability with portion, 
@@ -154,13 +203,13 @@ void network::ER_length1(double p, int L)
 		r1 = rand() % N;
 		x1 = r1 / m;
 		y1 = r1 % m;
-		minx = (x1 - L) > 0 ? (x1 - L) : 0;
-		maxx = (x1 + L) > m ? m : (x1 + L);
-		miny = (y1 - L) > 0 ? (y1 - L) : 0;
-		maxy = (y1 + L) > m ? m : (y1 + L);
+		minx = (x1 - L);// > 0 ? (x1 - L) : 0;
+		maxx = (x1 + L);// > m ? m : (x1 + L);
+		miny = (y1 - L);// > 0 ? (y1 - L) : 0;
+		maxy = (y1 + L);// > m ? m : (y1 + L);
 		x2 = minx + rand() % (maxx - minx);
 		y2 = miny + rand() % (maxy - miny);
-		r2 = x2 * m + y2;
+		r2 = ((x2 + m) % m) * m + (y2 + m) % m;
 
 		dx = abs(r1 / m - r2 / m);
 		dy = abs(r1 % m - r2 % m);
@@ -524,11 +573,12 @@ void* run(void *param)
 	couplednetwork cn;
 
 	cn.A->lattice(); 
-	for (double c = minl; c < maxl; c++) {
-		//cn.A->ER_length1((double)AVERAGE_DEGREE / N, c);
+	for (double c = minl; c < maxl && c < LATTICE_SIZE; c++) {
+		//cn.A->ER_length1((double)ER_AVERAGE_DEGREE / N, c);
 		//network B
-		//cn.B->ER_length1((double)ER_AVERAGE_DEGREE / N, c);
-		cn.B->random_geometric_graph(0.5, c);
+		cn.B->ER_length1((double)ER_AVERAGE_DEGREE / N, c);
+		//cn.B->random_geometric_graph(0.5, c);
+		//cn.A->random_geometric_graph(0.5, c);
 		//cn.A->G = cn.B->G;
 		//cn.B->scale_free_length(c);
 		//cn.B->configuration_model(3.0, c);
@@ -558,11 +608,12 @@ void* run(void *param)
 				fprintf(fp, "%d\t%f\t%f\t%d\t%d\t%d\n", k, c, p, cn.A->maxcc_size, cn.A->secondcc_size, iter);
 				//printf("%d\t%f\t%f\t%d\t%d\t%d\n", k, c, p, cn.A->maxcc_size, cn.A->secondcc_size, iter);
 				//fprintf(fp, "%d\t%f\t%f\t%d\t%f\t%d\n", k, c, p, cn.A->maxcc_size, avg_d, iter);
-
+				
 				cn.A->clear();
 				cn.B->clear();
 			}
-			printf("%.3f\t%.3f\n", c, p);
+			printf("%.3f\t%.3f\t%.3f\n", c, p, avg_d);
+			break;
 		}
 	}
 
@@ -606,6 +657,6 @@ int main()
 		//printf("waiting %d", tid[i]);	
 	}
 
-
+	getchar();
 	return 0;
 }
