@@ -3,6 +3,7 @@
 
 #ifdef _WIN32
 #pragma comment(lib, "pthreadVC2.lib")
+#include <Windows.h>
 #endif
 
 #include <stdio.h>
@@ -13,18 +14,21 @@
 #include <algorithm>
 //#include <iostream>
 #include <vector>
+//#include <hash_set>
+#include <unordered_map>
+#include <thread>
 using namespace std;
 
 //#include "visual.h"
 
 static const int LATTICE_SIZE = 100;
 static const int N = LATTICE_SIZE*LATTICE_SIZE;
-#define NSAMPLE 10	 
+#define NSAMPLE 100 
 
 #define ER_AVERAGE_DEGREE 5
-#define SF_GAMMA 3.0
+/*#define SF_GAMMA 3.0
 #define SF_GAMMA_NORM_FACTOR 1.202
-/*
+
 3.0	1.202
 2.9	1.223
 2.8 1.247
@@ -32,85 +36,85 @@ static const int N = LATTICE_SIZE*LATTICE_SIZE;
 2.6 1.305
 2.5 1.341
 */
-#define NTHREAD 3
-#define MINL 97
-#define LOAD_PER_THREAD 2
+#define NTHREAD 2
+#define MINL 2
+#define LOAD_PER_THREAD 3
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
 //stack stucture
 /*********************************************************************/
-#define	STACK_INCREASEMENT 50
-#define STACK_INITIAL 100
-typedef struct stack
+class stack
 {
+public:
 	int *head, *tail;
 	int size;
 	int empty;
-}stack;
-
-stack* stack_init()
-{
-	stack *ps = (stack *)malloc(sizeof(stack));
-	if (ps == NULL) {
-		printf("memory error");
-		exit(0);
-	}
-	ps->empty = STACK_INITIAL;
-	ps->size=STACK_INITIAL;
-	ps->head=(int*)malloc(sizeof(int)*STACK_INITIAL);
-	ps->tail=ps->head-1;//+s.len;
-	return ps;
-}
-
-void stack_push(stack *ps, int pt)
-{
-	if (ps->empty<1) {
-		ps->head = (int *)realloc(ps->head, sizeof(int) * (ps->size+STACK_INCREASEMENT));
-		if (ps->head == NULL) {
+	int	STACK_INCREASEMENT;
+	int STACK_INITIAL;
+	
+	void stack_init(int stack_initial_size=20, int stack_incrament_size=20)
+	{
+		STACK_INCREASEMENT = stack_incrament_size;
+		STACK_INITIAL = stack_initial_size;
+		empty = STACK_INITIAL;
+		size = STACK_INITIAL;
+		head = (int*)malloc(sizeof(int)*STACK_INITIAL);
+		if (head == NULL) {
 			printf("memory error");
 			exit(0);
 		}
-		//memcpy(tmp, ps->head, ps->size);
-		//ps->head = tmp;
-		ps->tail = ps->head + ps->size - 1;
-		ps->size += STACK_INCREASEMENT;
-		ps->empty = STACK_INCREASEMENT;
-
+		tail = head - 1;//+s.len;
 	}
-	ps->tail++;
-	*(ps->tail) = pt;
-	//ps->tail->y = pt.y;
-	ps->empty--;
-}
 
-int stack_pop(stack *ps)
-{
-	int pt = *(ps->tail);
-	ps->tail--;
-	ps->empty++;
-	return pt;
-}
+	void stack_push(int pt)
+	{
+		if (empty < 1) {
+			head = (int *)realloc(head, sizeof(int)* (size + STACK_INCREASEMENT));
+			if (head == NULL) {
+				printf("memory error");
+				exit(0);
+			}
+			//memcpy(tmp, ps->head, ps->size);
+			//ps->head = tmp;
+			tail = head + size - 1;
+			size += STACK_INCREASEMENT;
+			empty = STACK_INCREASEMENT;
 
-void stack_release(stack *ps)
-{
-	if (ps->head != NULL) {
-		free(ps->head);
-		ps->head = NULL;
+		}
+		tail++;
+		*(tail) = pt;
+		//ps->tail->y = pt.y;
+		empty--;
 	}
-	free(ps);
-}
 
-int stack_len(stack *ps)
-{
-	return ps->tail - ps->head+1;
-}
+	int stack_pop()
+	{
+		int pt = *(tail);
+		tail--;
+		empty++;
+		return pt;
+	}
 
-void stack_clear(stack *ps)
-{
-	ps->empty = ps->size;
-	ps->tail = ps->head - 1;   
-}
+	void stack_release()
+	{
+		if (head != NULL) {
+			free(head);
+			head = NULL;
+		}
+	}
+
+	int stack_len()
+	{
+		return tail - head + 1;
+	}
+
+	void stack_clear()
+	{
+		empty = size;
+		tail = head - 1;
+	}
+};
 
 //nodes, graph
 /******************************************************************/
@@ -123,6 +127,8 @@ public:
 	//point id;
 	int interdependent;		 //interdepent neighbor
 	stack *interconnect;	 //interconnect neighbors
+	//unordered_map<int, bool> hm;
+	//hash_set<int> hs;
 	bool alive;
 	int cluster;
 	
@@ -142,9 +148,9 @@ public:
 	network(int network_size);
 	~network();
 
-	void clear();
+	void init();
 
-	int dfs(int pt, int label);
+	int dfs(int pt, int lable);
 
 	void lattice();
 	void ER_length1(double p, int L);	
@@ -164,9 +170,12 @@ public :
 	network *A;
 	network *B;
 
+	//stack *scps;
+
 	void random_couple(void);
 	void gaint_component(network *G1, network *G2);
 	void init_attack(network *G1, network *G2, double p);
+	bool attack(network *G1, network *G2);
 };
 
 
